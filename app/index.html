@@ -1,0 +1,2090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U.S. Apparel LLC — Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* ========================================
+           BASE & RESET
+           ======================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-body: #070d1a;
+            --bg-sidebar: #0a1128;
+            --bg-topbar: rgba(10, 17, 40, 0.85);
+            --bg-card: rgba(255,255,255,0.03);
+            --border-card: rgba(255,255,255,0.06);
+            --border-card-hover: rgba(255,255,255,0.12);
+            --primary: #0b85f3;
+            --primary-light: #36a5ff;
+            --primary-glow: rgba(11,133,243,0.15);
+            --accent: #f59e0b;
+            --accent-glow: rgba(245,158,11,0.15);
+            --success: #10b981;
+            --success-glow: rgba(16,185,129,0.15);
+            --danger: #ef4444;
+            --danger-glow: rgba(239,68,68,0.15);
+            --warning: #f59e0b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --sidebar-width: 68px;
+            --topbar-height: 60px;
+        }
+        html, body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        body {
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(11,133,243,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(245,158,11,0.03) 0%, transparent 50%);
+        }
+
+        /* ========================================
+           SCROLLBAR
+           ======================================== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+
+        /* ========================================
+           SIDEBAR
+           ======================================== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-card);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            transition: all 0.3s ease;
+        }
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #0b85f3, #36a5ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: white;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(11,133,243,0.3);
+            flex-shrink: 0;
+            letter-spacing: -0.5px;
+        }
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+            padding: 0 10px;
+        }
+        .nav-item {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0 auto;
+        }
+        .nav-item:hover {
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.04);
+        }
+        .nav-item.active {
+            color: var(--primary-light);
+            background: var(--primary-glow);
+        }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 0 3px 3px 0;
+        }
+        .nav-item i { font-size: 18px; }
+        .nav-tooltip {
+            position: absolute;
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1e293b;
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform: translateY(-50%) translateX(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 200;
+        }
+        .nav-tooltip::before {
+            content: '';
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-right-color: #1e293b;
+        }
+        .nav-item:hover .nav-tooltip {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+        .sidebar-user {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 12px;
+            transition: transform 0.2s ease;
+        }
+        .sidebar-user:hover { transform: scale(1.08); }
+
+        /* ========================================
+           TOP BAR
+           ======================================== */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            height: var(--topbar-height);
+            background: var(--bg-topbar);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-card);
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 16px;
+        }
+        .topbar-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .topbar-title h1 {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--text-primary);
+        }
+        .topbar-badge {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--primary-glow);
+            color: var(--primary-light);
+            border: 1px solid rgba(11,133,243,0.2);
+        }
+        .topbar-search {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .topbar-search input {
+            width: 100%;
+            height: 36px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-card);
+            border-radius: 8px;
+            padding: 0 14px 0 36px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .topbar-search input::placeholder { color: var(--text-muted); }
+        .topbar-search input:focus {
+            border-color: rgba(11,133,243,0.4);
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 0 3px rgba(11,133,243,0.08);
+        }
+        .topbar-search-wrap {
+            position: relative;
+        }
+        .topbar-search-wrap i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .sync-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 8px rgba(16,185,129,0.5);
+            animation: syncPulse 2s ease-in-out infinite;
+        }
+        @keyframes syncPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+            50% { opacity: 0.5; box-shadow: 0 0 16px rgba(16,185,129,0.8); }
+        }
+        .notif-btn {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+            border: none;
+        }
+        .notif-btn:hover {
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.04);
+        }
+        .notif-btn i { font-size: 16px; }
+        .notif-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--danger);
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(239,68,68,0.4);
+        }
+        .topbar-date {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* ========================================
+           MAIN CONTENT
+           ======================================== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--topbar-height);
+            padding: 24px;
+            min-height: calc(100vh - var(--topbar-height));
+        }
+
+        /* ========================================
+           GLASS CARD
+           ======================================== */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-card);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: var(--border-card-hover);
+        }
+
+        /* ========================================
+           KPI CARDS
+           ======================================== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1400px) {
+            .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 900px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .kpi-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-card);
+            border-radius: 16px;
+            padding: 18px;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        .kpi-card:hover {
+            border-color: var(--border-card-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .kpi-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .kpi-icon.blue { background: var(--primary-glow); color: var(--primary-light); }
+        .kpi-icon.green { background: var(--success-glow); color: var(--success); }
+        .kpi-icon.amber { background: var(--accent-glow); color: var(--accent); }
+        .kpi-icon.red { background: var(--danger-glow); color: var(--danger); }
+        .kpi-icon.purple { background: rgba(139,92,246,0.15); color: #a78bfa; }
+        .kpi-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .kpi-trend.up { color: var(--success); }
+        .kpi-trend.down { color: var(--danger); }
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+            line-height: 1.1;
+        }
+        .kpi-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ========================================
+           CHART ROW
+           ======================================== */
+        .chart-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1100px) {
+            .chart-row { grid-template-columns: 1fr; }
+        }
+        .card-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .card-title h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .card-title-actions {
+            display: flex;
+            gap: 4px;
+        }
+        .chart-toggle-btn {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-card);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .chart-toggle-btn.active {
+            background: var(--primary-glow);
+            color: var(--primary-light);
+            border-color: rgba(11,133,243,0.3);
+        }
+        .chart-toggle-btn:hover:not(.active) {
+            color: var(--text-secondary);
+            border-color: var(--border-card-hover);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+        }
+        .chart-container.bar-chart { height: 280px; }
+        .chart-container.doughnut-chart { height: 220px; }
+        .chart-container.line-chart { height: 250px; }
+        .chart-container.pie-chart { height: 200px; }
+
+        .doughnut-legend {
+            margin-top: 16px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .legend-item:last-child { border-bottom: none; }
+        .legend-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .legend-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .legend-right {
+            text-align: right;
+        }
+        .legend-skus {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .legend-revenue {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* ========================================
+           DATA PANELS
+           ======================================== */
+        .panel-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1100px) {
+            .panel-row { grid-template-columns: 1fr; }
+        }
+
+        /* Orders Table */
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .orders-table th {
+            text-align: left;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            padding: 0 8px 10px 8px;
+            border-bottom: 1px solid var(--border-card);
+        }
+        .orders-table td {
+            padding: 10px 8px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+        .orders-table tr:last-child td { border-bottom: none; }
+        .orders-table tr {
+            transition: background 0.15s ease;
+        }
+        .orders-table tbody tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        .order-id {
+            font-weight: 600;
+            color: var(--primary-light);
+            font-size: 12px;
+        }
+        .order-customer {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .order-total {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-badge.processing {
+            background: rgba(11,133,243,0.12);
+            color: var(--primary-light);
+        }
+        .status-badge.shipped {
+            background: rgba(245,158,11,0.12);
+            color: var(--accent);
+        }
+        .status-badge.delivered {
+            background: rgba(16,185,129,0.12);
+            color: var(--success);
+        }
+        .status-badge.pending {
+            background: rgba(148,163,184,0.12);
+            color: var(--text-secondary);
+        }
+        .status-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+        .status-badge.processing .status-dot { background: var(--primary-light); }
+        .status-badge.shipped .status-dot { background: var(--accent); }
+        .status-badge.delivered .status-dot { background: var(--success); }
+        .status-badge.pending .status-dot { background: var(--text-secondary); }
+
+        /* Top Products */
+        .product-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+        .product-row:last-child { border-bottom: none; }
+        .product-rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .product-rank.top1 { background: linear-gradient(135deg, #f59e0b, #d97706); color: #1a1a1a; }
+        .product-rank.top2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #1a1a1a; }
+        .product-rank.top3 { background: linear-gradient(135deg, #cd7c2f, #a05a2c); color: #1a1a1a; }
+        .product-rank.other { background: rgba(255,255,255,0.05); color: var(--text-muted); }
+        .product-info { flex: 1; min-width: 0; }
+        .product-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .product-sku {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .product-revenue-col {
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .product-rev-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .product-bar {
+            width: 80px;
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 2px;
+            margin-top: 4px;
+            margin-left: auto;
+            overflow: hidden;
+        }
+        .product-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            transition: width 0.6s ease;
+        }
+
+        /* Activity Feed */
+        .activity-feed { max-height: 370px; overflow-y: auto; }
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-icon-wrap {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+        .activity-icon-wrap.order { background: var(--primary-glow); color: var(--primary-light); }
+        .activity-icon-wrap.view { background: rgba(139,92,246,0.12); color: #a78bfa; }
+        .activity-icon-wrap.reorder { background: var(--success-glow); color: var(--success); }
+        .activity-icon-wrap.alert { background: var(--danger-glow); color: var(--danger); }
+        .activity-icon-wrap.ship { background: var(--accent-glow); color: var(--accent); }
+        .activity-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            flex: 1;
+        }
+        .activity-text strong { color: var(--text-primary); font-weight: 600; }
+        .activity-text .highlight { color: var(--primary-light); font-weight: 500; }
+        .activity-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* Shipping & Targets */
+        .shipping-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .shipping-stat {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+        }
+        .shipping-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .shipping-stat-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .target-item {
+            margin-bottom: 16px;
+        }
+        .target-item:last-child { margin-bottom: 0; }
+        .target-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .target-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .target-values {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .target-values span { color: var(--text-primary); font-weight: 700; }
+        .target-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .target-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+        .target-bar-fill.blue { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+        .target-bar-fill.green { background: linear-gradient(90deg, #10b981, #34d399); }
+        .target-bar-fill.amber { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .target-pct {
+            font-size: 20px;
+            font-weight: 800;
+            margin-top: 6px;
+        }
+        .target-pct.blue { color: var(--primary-light); }
+        .target-pct.green { color: var(--success); }
+        .target-pct.amber { color: var(--accent); }
+
+        /* Search results overlay */
+        .search-results-overlay {
+            position: fixed;
+            top: var(--topbar-height);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 460px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: #111827;
+            border: 1px solid var(--border-card-hover);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            z-index: 200;
+            display: none;
+            padding: 8px;
+        }
+        .search-results-overlay.visible { display: block; }
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .search-result-item:hover { background: rgba(255,255,255,0.05); }
+        .search-result-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+        .search-result-icon.product { background: var(--primary-glow); color: var(--primary-light); }
+        .search-result-icon.customer { background: var(--success-glow); color: var(--success); }
+        .search-result-icon.order { background: var(--accent-glow); color: var(--accent); }
+        .search-result-text { flex: 1; }
+        .search-result-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .search-result-sub { font-size: 11px; color: var(--text-muted); }
+        .search-category-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 8px 10px 4px 10px;
+        }
+        .search-no-results {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* View containers */
+        .view-container { display: none; }
+        .view-container.active { display: block; }
+
+        /* Placeholder views */
+        .placeholder-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            text-align: center;
+        }
+        .placeholder-view i {
+            font-size: 48px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+        .placeholder-view h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .placeholder-view p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ========================================
+           ANIMATIONS
+           ======================================== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+        .delay-1 { animation-delay: 0.05s; opacity: 0; }
+        .delay-2 { animation-delay: 0.1s; opacity: 0; }
+        .delay-3 { animation-delay: 0.15s; opacity: 0; }
+        .delay-4 { animation-delay: 0.2s; opacity: 0; }
+        .delay-5 { animation-delay: 0.25s; opacity: 0; }
+        .delay-6 { animation-delay: 0.3s; opacity: 0; }
+
+        /* ========================================
+           UTILITY
+           ======================================== */
+        .hidden { display: none !important; }
+        .text-right { text-align: right; }
+        .font-mono { font-family: 'SF Mono', 'Fira Code', monospace; }
+        .order-date { font-size: 12px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+<!-- ============================================
+     SIDEBAR
+     ============================================ -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">US</div>
+    <nav class="sidebar-nav">
+        <div class="nav-item active" data-view="dashboard" onclick="showView('dashboard')">
+            <i class="fas fa-th-large"></i>
+            <span class="nav-tooltip">Dashboard</span>
+        </div>
+        <div class="nav-item" data-view="catalog" onclick="showView('catalog')">
+            <i class="fas fa-store"></i>
+            <span class="nav-tooltip">Catalog</span>
+        </div>
+        <div class="nav-item" data-view="orders" onclick="showView('orders')">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="nav-tooltip">Orders</span>
+        </div>
+        <div class="nav-item" data-view="inventory" onclick="showView('inventory')">
+            <i class="fas fa-boxes-stacked"></i>
+            <span class="nav-tooltip">Inventory</span>
+        </div>
+        <div class="nav-item" data-view="reorder" onclick="showView('reorder')">
+            <i class="fas fa-brain"></i>
+            <span class="nav-tooltip">AI Reorder</span>
+        </div>
+        <div class="nav-item" data-view="customers" onclick="showView('customers')">
+            <i class="fas fa-users"></i>
+            <span class="nav-tooltip">Customers</span>
+        </div>
+        <div class="nav-item" data-view="portal" onclick="showView('portal')">
+            <i class="fas fa-globe"></i>
+            <span class="nav-tooltip">Portal</span>
+        </div>
+        <div class="nav-item" data-view="settings" onclick="showView('settings')">
+            <i class="fas fa-gear"></i>
+            <span class="nav-tooltip">Settings</span>
+        </div>
+    </nav>
+    <div class="sidebar-user" title="Taha Ali">TA</div>
+</aside>
+
+<!-- ============================================
+     TOP BAR
+     ============================================ -->
+<header class="topbar" id="topbar">
+    <div class="topbar-title">
+        <h1>U.S. APPAREL</h1>
+        <span class="topbar-badge">COMMAND CENTER</span>
+    </div>
+    <div class="topbar-search">
+        <div class="topbar-search-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" id="globalSearch" placeholder="Search products, orders, customers..." autocomplete="off">
+        </div>
+    </div>
+    <div class="topbar-actions">
+        <div class="sync-indicator">
+            <span class="sync-dot"></span>
+            <span>Live Sync</span>
+        </div>
+        <button class="notif-btn" id="notifBtn">
+            <i class="fas fa-bell"></i>
+            <span class="notif-badge" id="notifCount">5</span>
+        </button>
+        <div class="topbar-date" id="currentDate"></div>
+    </div>
+</header>
+
+<!-- ============================================
+     SEARCH RESULTS OVERLAY
+     ============================================ -->
+<div class="search-results-overlay" id="searchResults"></div>
+
+<!-- ============================================
+     MAIN CONTENT
+     ============================================ -->
+<main class="main-content" id="mainContent">
+
+    <!-- ========== DASHBOARD VIEW ========== -->
+    <div class="view-container active" id="view-dashboard">
+
+        <!-- ROW 1: KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card animate-in delay-1">
+                <div class="kpi-header">
+                    <div class="kpi-icon blue"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> 12.5%</div>
+                </div>
+                <div class="kpi-value">$847,210</div>
+                <div class="kpi-label">Revenue MTD</div>
+            </div>
+            <div class="kpi-card animate-in delay-2">
+                <div class="kpi-header">
+                    <div class="kpi-icon green"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> 8.3%</div>
+                </div>
+                <div class="kpi-value">342</div>
+                <div class="kpi-label">Orders MTD</div>
+            </div>
+            <div class="kpi-card animate-in delay-3">
+                <div class="kpi-header">
+                    <div class="kpi-icon purple"><i class="fas fa-building"></i></div>
+                    <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> 4.1%</div>
+                </div>
+                <div class="kpi-value">187</div>
+                <div class="kpi-label">Active B2B Clients</div>
+            </div>
+            <div class="kpi-card animate-in delay-4">
+                <div class="kpi-header">
+                    <div class="kpi-icon amber"><i class="fas fa-tags"></i></div>
+                    <div class="kpi-trend down"><i class="fas fa-arrow-down"></i> 2.1%</div>
+                </div>
+                <div class="kpi-value">183</div>
+                <div class="kpi-label">Active SKUs</div>
+            </div>
+            <div class="kpi-card animate-in delay-5">
+                <div class="kpi-header">
+                    <div class="kpi-icon blue"><i class="fas fa-receipt"></i></div>
+                    <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> 5.7%</div>
+                </div>
+                <div class="kpi-value">$2,475</div>
+                <div class="kpi-label">Avg Order Value</div>
+            </div>
+            <div class="kpi-card animate-in delay-6">
+                <div class="kpi-header">
+                    <div class="kpi-icon red"><i class="fas fa-triangle-exclamation"></i></div>
+                    <div class="kpi-trend down" style="color: var(--danger);"><i class="fas fa-exclamation-circle"></i> Alert</div>
+                </div>
+                <div class="kpi-value" style="color: var(--danger);">14</div>
+                <div class="kpi-label">Low Stock Alerts</div>
+            </div>
+        </div>
+
+        <!-- ROW 2: Charts -->
+        <div class="chart-row">
+            <!-- Revenue by Product Line -->
+            <div class="glass-card animate-in delay-2">
+                <div class="card-title">
+                    <h3><i class="fas fa-chart-bar" style="margin-right:8px; color: var(--primary-light); font-size:13px;"></i>Revenue by Product Line</h3>
+                    <div class="card-title-actions">
+                        <button class="chart-toggle-btn active" id="btnMonthly" onclick="toggleRevenueChart('monthly')">Monthly</button>
+                        <button class="chart-toggle-btn" id="btnQuarterly" onclick="toggleRevenueChart('quarterly')">Quarterly</button>
+                    </div>
+                </div>
+                <div class="chart-container bar-chart">
+                    <canvas id="revenueBarChart"></canvas>
+                </div>
+            </div>
+            <!-- Sales by Category -->
+            <div class="glass-card animate-in delay-3">
+                <div class="card-title">
+                    <h3><i class="fas fa-chart-pie" style="margin-right:8px; color: var(--accent); font-size:13px;"></i>Sales by Category</h3>
+                </div>
+                <div class="chart-container doughnut-chart">
+                    <canvas id="categoryDoughnut"></canvas>
+                </div>
+                <div class="doughnut-legend">
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="legend-dot" style="background: #0b85f3;"></div>
+                            <span class="legend-name">Swimwear</span>
+                        </div>
+                        <div class="legend-right">
+                            <div class="legend-skus">45 SKUs</div>
+                            <div class="legend-revenue">$382,400</div>
+                        </div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="legend-dot" style="background: #10b981;"></div>
+                            <span class="legend-name">Resort</span>
+                        </div>
+                        <div class="legend-right">
+                            <div class="legend-skus">89 SKUs</div>
+                            <div class="legend-revenue">$298,100</div>
+                        </div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="legend-dot" style="background: #f59e0b;"></div>
+                            <span class="legend-name">Imprintables</span>
+                        </div>
+                        <div class="legend-right">
+                            <div class="legend-skus">34 SKUs</div>
+                            <div class="legend-revenue">$124,300</div>
+                        </div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="legend-dot" style="background: #64748b;"></div>
+                            <span class="legend-name">Last Call</span>
+                        </div>
+                        <div class="legend-right">
+                            <div class="legend-skus">15 SKUs</div>
+                            <div class="legend-revenue">$42,410</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROW 3: Recent Orders + Top Products -->
+        <div class="panel-row">
+            <!-- Recent Orders -->
+            <div class="glass-card animate-in delay-3">
+                <div class="card-title">
+                    <h3><i class="fas fa-receipt" style="margin-right:8px; color: var(--primary-light); font-size:13px;"></i>Recent Orders</h3>
+                    <button class="chart-toggle-btn" onclick="showView('orders')" style="font-size:11px;">View All</button>
+                </div>
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th class="text-right">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentOrdersBody">
+                    </tbody>
+                </table>
+            </div>
+            <!-- Top Performing Products -->
+            <div class="glass-card animate-in delay-4">
+                <div class="card-title">
+                    <h3><i class="fas fa-trophy" style="margin-right:8px; color: var(--accent); font-size:13px;"></i>Top Performing Products</h3>
+                    <button class="chart-toggle-btn" onclick="showView('catalog')" style="font-size:11px;">View All</button>
+                </div>
+                <div id="topProductsList"></div>
+            </div>
+        </div>
+
+        <!-- ROW 4: Revenue Trend + Activity Feed -->
+        <div class="panel-row">
+            <!-- Revenue Trend -->
+            <div class="glass-card animate-in delay-4">
+                <div class="card-title">
+                    <h3><i class="fas fa-chart-line" style="margin-right:8px; color: var(--success); font-size:13px;"></i>Revenue Trend — March 2026</h3>
+                </div>
+                <div class="chart-container line-chart">
+                    <canvas id="revenueTrendChart"></canvas>
+                </div>
+            </div>
+            <!-- Customer Activity Feed -->
+            <div class="glass-card animate-in delay-5">
+                <div class="card-title">
+                    <h3><i class="fas fa-rss" style="margin-right:8px; color: #a78bfa; font-size:13px;"></i>Customer Activity Feed</h3>
+                </div>
+                <div class="activity-feed" id="activityFeed"></div>
+            </div>
+        </div>
+
+        <!-- ROW 5: Shipping Overview + Monthly Targets -->
+        <div class="panel-row">
+            <!-- Shipping Overview -->
+            <div class="glass-card animate-in delay-5">
+                <div class="card-title">
+                    <h3><i class="fas fa-truck" style="margin-right:8px; color: var(--accent); font-size:13px;"></i>Shipping Overview</h3>
+                </div>
+                <div style="display: flex; gap: 20px; align-items: flex-start;">
+                    <div style="width: 180px; flex-shrink: 0;">
+                        <div class="chart-container pie-chart">
+                            <canvas id="shippingPieChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="shipping-stats" style="flex: 1;">
+                        <div class="shipping-stat">
+                            <div class="shipping-stat-label">
+                                <i class="fas fa-truck-moving" style="color: var(--primary-light);"></i>
+                                In Transit
+                            </div>
+                            <div class="shipping-stat-value">31</div>
+                        </div>
+                        <div class="shipping-stat">
+                            <div class="shipping-stat-label">
+                                <i class="fas fa-truck-ramp-box" style="color: var(--success);"></i>
+                                Out for Delivery
+                            </div>
+                            <div class="shipping-stat-value">12</div>
+                        </div>
+                        <div class="shipping-stat">
+                            <div class="shipping-stat-label">
+                                <i class="fas fa-clock" style="color: var(--danger);"></i>
+                                Delayed
+                            </div>
+                            <div class="shipping-stat-value" style="color: var(--danger);">3</div>
+                        </div>
+                        <div class="shipping-stat">
+                            <div class="shipping-stat-label">
+                                <i class="fas fa-circle-check" style="color: var(--success);"></i>
+                                Delivered (MTD)
+                            </div>
+                            <div class="shipping-stat-value" style="color: var(--success);">287</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Monthly Targets -->
+            <div class="glass-card animate-in delay-6">
+                <div class="card-title">
+                    <h3><i class="fas fa-bullseye" style="margin-right:8px; color: var(--danger); font-size:13px;"></i>Monthly Targets</h3>
+                    <span style="font-size: 11px; color: var(--text-muted);">March 2026</span>
+                </div>
+                <div class="target-item">
+                    <div class="target-header">
+                        <span class="target-label">Revenue</span>
+                        <span class="target-values"><span>$847K</span> / $1,000K</span>
+                    </div>
+                    <div class="target-bar">
+                        <div class="target-bar-fill blue" style="width: 85%;"></div>
+                    </div>
+                    <div class="target-pct blue">85%</div>
+                </div>
+                <div class="target-item">
+                    <div class="target-header">
+                        <span class="target-label">Orders</span>
+                        <span class="target-values"><span>342</span> / 440</span>
+                    </div>
+                    <div class="target-bar">
+                        <div class="target-bar-fill green" style="width: 78%;"></div>
+                    </div>
+                    <div class="target-pct green">78%</div>
+                </div>
+                <div class="target-item">
+                    <div class="target-header">
+                        <span class="target-label">New Customers</span>
+                        <span class="target-values"><span>7</span> / 12</span>
+                    </div>
+                    <div class="target-bar">
+                        <div class="target-bar-fill amber" style="width: 60%;"></div>
+                    </div>
+                    <div class="target-pct amber">60%</div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /view-dashboard -->
+
+    <!-- ========== PLACEHOLDER VIEWS ========== -->
+    <div class="view-container" id="view-catalog">
+        <div class="placeholder-view">
+            <i class="fas fa-store"></i>
+            <h2>B2B Product Catalog</h2>
+            <p>Product catalog module will be loaded here.</p>
+        </div>
+    </div>
+    <div class="view-container" id="view-orders">
+        <div class="placeholder-view">
+            <i class="fas fa-shopping-cart"></i>
+            <h2>Order Management</h2>
+            <p>Order management module will be loaded here.</p>
+        </div>
+    </div>
+    <div class="view-container" id="view-inventory">
+        <div class="placeholder-view">
+            <i class="fas fa-boxes-stacked"></i>
+            <h2>Inventory Tracker</h2>
+            <p>Inventory tracking module will be loaded here.</p>
+        </div>
+    </div>
+    <div class="view-container" id="view-reorder">
+        <div class="placeholder-view">
+            <i class="fas fa-brain"></i>
+            <h2>AI Reorder Predictions</h2>
+            <p>AI-powered reorder prediction module will be loaded here.</p>
+        </div>
+    </div>
+    <div class="view-container" id="view-customers">
+        <div class="placeholder-view">
+            <i class="fas fa-users"></i>
+            <h2>Customer CRM</h2>
+            <p>Customer relationship management module will be loaded here.</p>
+        </div>
+    </div>
+    <div class="view-container" id="view-portal">
+        <div class="placeholder-view">
+            <i class="fas fa-globe"></i>
+            <h2>Customer Portal</h2>
+            <p>Customer-facing portal will be loaded here.</p>
+        </div>
+    </div>
+    <div class="view-container" id="view-settings">
+        <div class="placeholder-view">
+            <i class="fas fa-gear"></i>
+            <h2>System Settings</h2>
+            <p>System configuration module will be loaded here.</p>
+        </div>
+    </div>
+
+</main>
+
+<!-- ============================================
+     JAVASCRIPT — DATA, LOGIC, CHARTS
+     ============================================ -->
+<script>
+// ==========================================
+// SHARED APPLICATION DATA
+// ==========================================
+window.APP_DATA = {};
+
+window.APP_DATA.PRODUCTS = [
+    { sku: 'MPS-315', name: 'Floral Vines', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 14.50, stock: 820 },
+    { sku: 'MPS-314', name: 'Geometric', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 14.50, stock: 1240 },
+    { sku: 'MPS-313', name: 'Tasty Waves', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 14.50, stock: 45 },
+    { sku: 'MPS-309', name: 'Palm Paradise', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 13.75, stock: 920 },
+    { sku: 'MPS-308', name: 'Palmlandia', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 13.75, stock: 30 },
+    { sku: 'MPS-307', name: 'Palm Shadows', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 13.75, stock: 670 },
+    { sku: 'MPS-306', name: 'Phaser', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 14.50, stock: 88 },
+    { sku: 'MCS-318', name: 'Eclipse', category: 'swimwear', sub: 'Mens Shorts', colors: 2, price: 15.25, stock: 55 },
+    { sku: 'MCS-312', name: 'Palmbre', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 14.50, stock: 340 },
+    { sku: 'MCS-311', name: 'Primitive', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 14.50, stock: 22 },
+    { sku: 'MAS-317', name: 'Beach Comber', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 15.25, stock: 1100 },
+    { sku: 'MN-274', name: 'American Floral', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 13.25, stock: 460 },
+    { sku: 'MN-275', name: 'Palm Reflection', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 13.25, stock: 780 },
+    { sku: 'MPS-273', name: 'Iconic Beach', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 13.75, stock: 15 },
+    { sku: 'APS-9279', name: 'Iconic Beach Camp Shirt', category: 'swimwear', sub: 'Mens Shirts', colors: 2, price: 18.50, stock: 290 },
+    { sku: 'MPS-272', name: 'Villa Palm', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 13.75, stock: 520 },
+    { sku: 'APS-9278', name: 'Villa Palm Camp Shirt', category: 'swimwear', sub: 'Mens Shirts', colors: 2, price: 18.50, stock: 180 },
+    { sku: 'MPS-267', name: 'Floral Horizon', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 13.25, stock: 890 },
+    { sku: 'MPS-265', name: 'Sailboats', category: 'swimwear', sub: 'Mens Shorts', colors: 2, price: 13.25, stock: 120 },
+    { sku: 'MPS-264', name: 'Fishes', category: 'swimwear', sub: 'Mens Shorts', colors: 2, price: 13.25, stock: 350 },
+    { sku: 'MPS-271', name: 'Kawabunga', category: 'swimwear', sub: 'Mens Shorts', colors: 4, price: 13.75, stock: 740 },
+    { sku: 'MCS-270', name: 'Flowy Leaves', category: 'swimwear', sub: 'Mens Shorts', colors: 2, price: 14.50, stock: 200 },
+    { sku: 'BY-280', name: 'Kawabunga Boys', category: 'swimwear', sub: 'Boys', colors: 2, price: 9.75, stock: 420 },
+    { sku: 'LBS-276', name: 'Palm Party', category: 'swimwear', sub: 'Girls Shorts', colors: 4, price: 10.50, stock: 310 },
+    { sku: 'LBS-277', name: 'Bird Garden', category: 'swimwear', sub: 'Girls Shorts', colors: 4, price: 10.50, stock: 65 },
+    { sku: 'YFL-6297', name: 'Ladies Relaxed Fit Shorts', category: 'resort', sub: 'Women Shorts', colors: 4, price: 11.25, stock: 580 },
+    { sku: 'YJY-6287', name: 'Ladies Track Shorts', category: 'resort', sub: 'Women Shorts', colors: 4, price: 10.75, stock: 42 },
+    { sku: 'YJY-6291', name: 'Ladies GD Track Shorts', category: 'resort', sub: 'Women Shorts', colors: 5, price: 12.25, stock: 720 },
+    { sku: 'YJY-4292', name: 'Ladies GD Baby Tee', category: 'resort', sub: 'Women Tees', colors: 5, price: 11.50, stock: 18 },
+    { sku: 'YJY-4290', name: 'Ladies Baby Tee', category: 'resort', sub: 'Women Tees', colors: 4, price: 10.25, stock: 960 },
+    { sku: 'YFR-6299', name: 'Ladies Boho Striped Shorts', category: 'resort', sub: 'Women Shorts', colors: 2, price: 12.75, stock: 280 },
+    { sku: 'YJY-4295', name: 'Ladies Kaia Crew Tee', category: 'resort', sub: 'Women Tees', colors: 4, price: 11.50, stock: 55 },
+    { sku: 'YFR-1298', name: 'Ladies Boho Striped Hoodie', category: 'resort', sub: 'Women Hoodies', colors: 2, price: 18.75, stock: 190 },
+    { sku: 'YFL-4296', name: 'Ladies Oversized Tee', category: 'resort', sub: 'Women Tees', colors: 4, price: 12.25, stock: 870 },
+    { sku: 'YJY-5293', name: 'Spaghetti Tank', category: 'resort', sub: 'Women Tanks', colors: 5, price: 9.50, stock: 1300 },
+    { sku: 'YJY-5289', name: 'Ladies Racer Tank', category: 'resort', sub: 'Women Tanks', colors: 4, price: 9.50, stock: 1100 },
+    { sku: 'YJY-5294', name: 'Ladies Isla Tank', category: 'resort', sub: 'Women Tanks', colors: 4, price: 9.75, stock: 890 },
+    { sku: 'YJY-5301', name: 'Paradise Ribbed Tank', category: 'resort', sub: 'Women Tanks', colors: 6, price: 10.50, stock: 32 },
+    { sku: 'SJY-5242', name: 'Jersey Tank', category: 'resort', sub: 'Women Tanks', colors: 4, price: 9.25, stock: 640 },
+    { sku: 'SJY-8241', name: 'Jersey Tank Dress', category: 'resort', sub: 'Women Coordinates', colors: 4, price: 16.50, stock: 410 },
+    { sku: 'YFR-4214', name: 'Vintage Raw Edge Crew', category: 'resort', sub: 'Women Tees', colors: 6, price: 12.75, stock: 760 },
+    { sku: 'YFR-6215', name: 'Vintage Raw Edge Short', category: 'resort', sub: 'Women Shorts', colors: 6, price: 11.25, stock: 680 },
+    { sku: 'YJY-4218', name: 'Sassy V-Neck Tee', category: 'resort', sub: 'Women Tees', colors: 4, price: 10.75, stock: 540 },
+    { sku: 'YJY-5222', name: 'Cut Rib Tank', category: 'resort', sub: 'Women Tanks', colors: 4, price: 9.50, stock: 470 },
+    { sku: 'YJY-5217', name: 'Open Back Muscle Tank', category: 'resort', sub: 'Women Tanks', colors: 6, price: 10.25, stock: 11 },
+    { sku: 'YJY-5288', name: 'Ladies Spaghetti Tank', category: 'resort', sub: 'Women Tanks', colors: 4, price: 9.50, stock: 28 },
+    { sku: 'YJY-5276', name: 'Surface Dyed Racer Tank', category: 'resort', sub: 'Women Tanks', colors: 4, price: 10.75, stock: 380 },
+    { sku: 'MTT-5155', name: 'Mineral Washed Tank', category: 'resort', sub: 'Mens Tanks', colors: 4, price: 11.25, stock: 620 },
+    { sku: 'MTT-5273', name: 'Surface Dyed Tank', category: 'resort', sub: 'Mens Tanks', colors: 4, price: 11.25, stock: 440 },
+    { sku: 'MMS-5283', name: 'Surface Dyed Muscle Tee', category: 'resort', sub: 'Mens Tanks', colors: 4, price: 11.75, stock: 360 },
+    { sku: 'SJY-6243', name: 'Jersey Shorts', category: 'resort', sub: 'Women Shorts', colors: 4, price: 10.75, stock: 510 },
+    { sku: 'UFR-1300', name: 'Unisex Boho Striped Hoodie', category: 'resort', sub: 'Unisex', colors: 4, price: 19.50, stock: 85 },
+    { sku: 'URP-1225', name: 'Relaxed Fit Raglan Hoodie', category: 'resort', sub: 'Unisex Hoodies', colors: 4, price: 18.25, stock: 150 },
+    { sku: 'IMP-1001', name: 'Classic Crew Tee', category: 'imprintables', sub: 'Mens', colors: 8, price: 5.75, stock: 3200 },
+    { sku: 'IMP-1002', name: 'Premium V-Neck', category: 'imprintables', sub: 'Mens', colors: 6, price: 6.25, stock: 2800 },
+    { sku: 'IMP-1003', name: 'Ringspun Tank', category: 'imprintables', sub: 'Unisex', colors: 5, price: 5.25, stock: 1900 },
+    { sku: 'IMP-1004', name: 'Ladies Fitted Tee', category: 'imprintables', sub: 'Women', colors: 6, price: 5.75, stock: 2400 },
+    { sku: 'IMP-1005', name: 'Heavyweight Crew', category: 'imprintables', sub: 'Unisex', colors: 4, price: 7.50, stock: 1600 },
+    { sku: 'IMP-1006', name: 'Performance Blend Tee', category: 'imprintables', sub: 'Unisex', colors: 5, price: 6.50, stock: 2100 },
+    { sku: 'IMP-1007', name: 'Tri-Blend V-Neck', category: 'imprintables', sub: 'Women', colors: 4, price: 7.25, stock: 1800 },
+    { sku: 'IMP-1008', name: 'Youth Classic Tee', category: 'imprintables', sub: 'Youth', colors: 6, price: 4.75, stock: 2500 },
+    { sku: 'MPS-260', name: 'Tulum', category: 'lastcall', sub: 'Mens Shorts', colors: 3, price: 8.99, stock: 45 },
+    { sku: 'MPS-262', name: 'Camo Tribal', category: 'lastcall', sub: 'Mens Shorts', colors: 3, price: 8.99, stock: 38 },
+    { sku: 'MPS-261', name: 'Fiesta', category: 'lastcall', sub: 'Mens Shorts', colors: 2, price: 7.99, stock: 22 },
+    { sku: 'MSE-263', name: 'Heatwave', category: 'lastcall', sub: 'Mens Shorts', colors: 2, price: 8.99, stock: 15 },
+    { sku: 'MTT-5231', name: 'Star Print Tank', category: 'lastcall', sub: 'Mens Tanks', colors: 2, price: 6.99, stock: 60 },
+    { sku: 'MFL-8247', name: 'Cut-Off Raglan Crew', category: 'lastcall', sub: 'Mens Tops', colors: 4, price: 7.50, stock: 80 },
+    { sku: 'YFR-4249', name: 'Raglan Athletic Tee', category: 'lastcall', sub: 'Women Tees', colors: 4, price: 7.50, stock: 95 },
+];
+
+window.APP_DATA.CUSTOMERS = [
+    { id: 1, name: 'Sandals Resort Group', tier: 'platinum', location: 'Jamaica / Bahamas', orders: 87, ltv: 142500, lastOrder: '2026-03-14', topProduct: 'MPS-315', contact: 'Marcus Williams', email: 'mwilliams@sandals.com', phone: '876-555-0142', joinDate: '2019-03-15' },
+    { id: 2, name: 'Hilton Hotels & Resorts', tier: 'platinum', location: 'Multi-Location', orders: 124, ltv: 218700, lastOrder: '2026-03-18', topProduct: 'IMP-1001', contact: 'Sarah Chen', email: 'schen@hilton.com', phone: '407-555-0198', joinDate: '2018-06-22' },
+    { id: 3, name: 'Marriott Vacations', tier: 'platinum', location: 'Orlando, FL', orders: 96, ltv: 167300, lastOrder: '2026-03-10', topProduct: 'MPS-309', contact: 'David Torres', email: 'dtorres@marriott.com', phone: '407-555-0234', joinDate: '2019-01-10' },
+    { id: 4, name: 'Beach Vibes Wholesale', tier: 'gold', location: 'Miami, FL', orders: 62, ltv: 84200, lastOrder: '2026-03-17', topProduct: 'MAS-317', contact: 'Lisa Park', email: 'lisa@beachvibes.com', phone: '305-555-0167', joinDate: '2020-04-08' },
+    { id: 5, name: 'Island Threads Distro', tier: 'gold', location: 'Key West, FL', orders: 54, ltv: 71800, lastOrder: '2026-03-09', topProduct: 'MPS-307', contact: 'James Reed', email: 'jreed@islandthreads.com', phone: '305-555-0289', joinDate: '2020-08-15' },
+    { id: 6, name: 'Tropical Outfitters Co.', tier: 'gold', location: 'San Juan, PR', orders: 48, ltv: 63400, lastOrder: '2026-02-28', topProduct: 'MCS-312', contact: 'Ana Gonzalez', email: 'ana@tropicaloutfitters.com', phone: '787-555-0145', joinDate: '2021-01-20' },
+    { id: 7, name: 'Coastal Living Retail', tier: 'gold', location: 'Myrtle Beach, SC', orders: 41, ltv: 52100, lastOrder: '2026-03-15', topProduct: 'YJY-5293', contact: 'Mike Johnson', email: 'mike@coastalliving.com', phone: '843-555-0178', joinDate: '2021-05-12' },
+    { id: 8, name: 'SunSplash Stores', tier: 'silver', location: 'Tampa, FL', orders: 28, ltv: 34600, lastOrder: '2026-03-12', topProduct: 'YJY-4290', contact: 'Karen Adams', email: 'karen@sunsplash.com', phone: '813-555-0156', joinDate: '2022-02-28' },
+    { id: 9, name: 'Paradise Print Shop', tier: 'silver', location: 'Orlando, FL', orders: 35, ltv: 28900, lastOrder: '2026-03-05', topProduct: 'IMP-1003', contact: 'Tom Harris', email: 'tom@paradiseprint.com', phone: '407-555-0345', joinDate: '2021-09-14' },
+    { id: 10, name: 'Gulf Coast Merch', tier: 'silver', location: 'Destin, FL', orders: 22, ltv: 21400, lastOrder: '2026-02-20', topProduct: 'MTT-5155', contact: 'Rob Martinez', email: 'rob@gulfcoastmerch.com', phone: '850-555-0234', joinDate: '2022-07-03' },
+    { id: 11, name: 'Aloha Imports', tier: 'silver', location: 'Honolulu, HI', orders: 19, ltv: 18700, lastOrder: '2026-03-01', topProduct: 'MPS-271', contact: 'Kai Nakamura', email: 'kai@alohaimports.com', phone: '808-555-0189', joinDate: '2023-01-15' },
+    { id: 12, name: 'WaveRider Apparel', tier: 'silver', location: 'Outer Banks, NC', orders: 15, ltv: 14200, lastOrder: '2026-02-15', topProduct: 'MPS-313', contact: 'Chris Wells', email: 'chris@waverider.com', phone: '252-555-0167', joinDate: '2023-06-20' },
+    { id: 13, name: 'Caribbean Sun Trading', tier: 'gold', location: 'Nassau, Bahamas', orders: 38, ltv: 47800, lastOrder: '2026-03-16', topProduct: 'MPS-272', contact: 'Derek Brown', email: 'derek@caribbeansun.com', phone: '242-555-0134', joinDate: '2021-03-08' },
+    { id: 14, name: 'Pacific Breeze Corp', tier: 'silver', location: 'San Diego, CA', orders: 24, ltv: 29100, lastOrder: '2026-03-08', topProduct: 'YFL-4296', contact: 'Jennifer Liu', email: 'jliu@pacificbreeze.com', phone: '619-555-0278', joinDate: '2022-11-01' },
+    { id: 15, name: 'Sunset Strip Wholesale', tier: 'gold', location: 'Los Angeles, CA', orders: 45, ltv: 58900, lastOrder: '2026-03-13', topProduct: 'YFR-4214', contact: 'Tyler Ross', email: 'tyler@sunsetstrip.com', phone: '310-555-0345', joinDate: '2020-10-25' },
+];
+
+window.APP_DATA.ORDERS = [
+    { id: 'USA-26-4281', customerId: 2, items: [{sku:'MPS-315',name:'Floral Vines',qty:200,price:14.50},{sku:'IMP-1001',name:'Classic Crew Tee',qty:500,price:5.75}], total: 5775, status: 'processing', date: '2026-03-20', shipMethod: 'UPS Ground', tracking: '' },
+    { id: 'USA-26-4280', customerId: 1, items: [{sku:'MPS-314',name:'Geometric',qty:300,price:14.50},{sku:'MPS-309',name:'Palm Paradise',qty:300,price:13.75},{sku:'MAS-317',name:'Beach Comber',qty:150,price:15.25}], total: 12487, status: 'shipped', date: '2026-03-19', shipMethod: 'FedEx Express', tracking: '789456123012' },
+    { id: 'USA-26-4279', customerId: 4, items: [{sku:'MAS-317',name:'Beach Comber',qty:200,price:15.25},{sku:'MPS-307',name:'Palm Shadows',qty:150,price:13.75}], total: 5112, status: 'pending', date: '2026-03-19', shipMethod: '', tracking: '' },
+    { id: 'USA-26-4278', customerId: 3, items: [{sku:'YJY-5293',name:'Spaghetti Tank',qty:400,price:9.50},{sku:'YJY-4290',name:'Ladies Baby Tee',qty:300,price:10.25}], total: 6875, status: 'processing', date: '2026-03-18', shipMethod: 'UPS Ground', tracking: '' },
+    { id: 'USA-26-4277', customerId: 5, items: [{sku:'MCS-312',name:'Palmbre',qty:100,price:14.50},{sku:'MPS-271',name:'Kawabunga',qty:200,price:13.75}], total: 4200, status: 'shipped', date: '2026-03-18', shipMethod: 'FedEx Ground', tracking: '456789012345' },
+    { id: 'USA-26-4276', customerId: 7, items: [{sku:'YFL-4296',name:'Ladies Oversized Tee',qty:150,price:12.25},{sku:'YFR-4214',name:'Vintage Raw Edge Crew',qty:100,price:12.75}], total: 3112, status: 'pending', date: '2026-03-17', shipMethod: '', tracking: '' },
+    { id: 'USA-26-4275', customerId: 8, items: [{sku:'YJY-4290',name:'Ladies Baby Tee',qty:200,price:10.25}], total: 2050, status: 'shipped', date: '2026-03-17', shipMethod: 'UPS Ground', tracking: '321654987012' },
+    { id: 'USA-26-4274', customerId: 6, items: [{sku:'MPS-308',name:'Palmlandia',qty:250,price:13.75},{sku:'MCS-318',name:'Eclipse',qty:100,price:15.25}], total: 4962, status: 'processing', date: '2026-03-16', shipMethod: 'FedEx Express', tracking: '' },
+    { id: 'USA-26-4273', customerId: 9, items: [{sku:'IMP-1001',name:'Classic Crew Tee',qty:1000,price:5.75},{sku:'IMP-1003',name:'Ringspun Tank',qty:500,price:5.25}], total: 8375, status: 'delivered', date: '2026-03-15', shipMethod: 'UPS Freight', tracking: '654321098765' },
+    { id: 'USA-26-4272', customerId: 10, items: [{sku:'MTT-5155',name:'Mineral Washed Tank',qty:100,price:11.25},{sku:'MMS-5283',name:'Surface Dyed Muscle Tee',qty:100,price:11.75}], total: 2300, status: 'delivered', date: '2026-03-14', shipMethod: 'FedEx Ground', tracking: '987654321098' },
+    { id: 'USA-26-4271', customerId: 11, items: [{sku:'MPS-271',name:'Kawabunga',qty:150,price:13.75},{sku:'BY-280',name:'Kawabunga Boys',qty:100,price:9.75}], total: 3037, status: 'delivered', date: '2026-03-13', shipMethod: 'UPS Ground', tracking: '147258369012' },
+    { id: 'USA-26-4270', customerId: 2, items: [{sku:'IMP-1004',name:'Ladies Fitted Tee',qty:800,price:5.75},{sku:'IMP-1002',name:'Premium V-Neck',qty:600,price:6.25}], total: 8350, status: 'delivered', date: '2026-03-12', shipMethod: 'UPS Freight', tracking: '258369147012' },
+    { id: 'USA-26-4269', customerId: 13, items: [{sku:'MPS-272',name:'Villa Palm',qty:200,price:13.75},{sku:'APS-9278',name:'Villa Palm Camp Shirt',qty:100,price:18.50}], total: 4600, status: 'delivered', date: '2026-03-11', shipMethod: 'FedEx Express', tracking: '369147258012' },
+    { id: 'USA-26-4268', customerId: 15, items: [{sku:'YFR-4214',name:'Vintage Raw Edge Crew',qty:300,price:12.75},{sku:'YFR-6215',name:'Vintage Raw Edge Short',qty:200,price:11.25}], total: 6075, status: 'delivered', date: '2026-03-10', shipMethod: 'UPS Ground', tracking: '741852963012' },
+    { id: 'USA-26-4267', customerId: 14, items: [{sku:'YFL-4296',name:'Ladies Oversized Tee',qty:150,price:12.25},{sku:'YJY-5294',name:'Ladies Isla Tank',qty:200,price:9.75}], total: 3787, status: 'delivered', date: '2026-03-09', shipMethod: 'FedEx Ground', tracking: '852963741012' },
+    { id: 'USA-26-4266', customerId: 1, items: [{sku:'MPS-315',name:'Floral Vines',qty:400,price:14.50},{sku:'MPS-307',name:'Palm Shadows',qty:300,price:13.75}], total: 9925, status: 'delivered', date: '2026-03-08', shipMethod: 'FedEx Express', tracking: '963741852012' },
+];
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+function formatCurrency(amount) {
+    return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function formatCurrencyFull(amount) {
+    return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getCustomerById(id) {
+    return window.APP_DATA.CUSTOMERS.find(c => c.id === id);
+}
+
+function getProductBySku(sku) {
+    return window.APP_DATA.PRODUCTS.find(p => p.sku === sku);
+}
+
+// ==========================================
+// VIEW SWITCHING
+// ==========================================
+window.showView = function(viewName) {
+    // Hide all views
+    document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+    // Show target view
+    const target = document.getElementById('view-' + viewName);
+    if (target) target.classList.add('active');
+
+    // Update nav
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navItem = document.querySelector(`.nav-item[data-view="${viewName}"]`);
+    if (navItem) navItem.classList.add('active');
+};
+
+// ==========================================
+// CURRENT DATE
+// ==========================================
+function setCurrentDate() {
+    const now = new Date();
+    const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+    document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+}
+
+// ==========================================
+// RECENT ORDERS TABLE
+// ==========================================
+function renderRecentOrders() {
+    const orders = window.APP_DATA.ORDERS.slice(0, 8);
+    const tbody = document.getElementById('recentOrdersBody');
+    tbody.innerHTML = orders.map(order => {
+        const customer = getCustomerById(order.customerId);
+        return `
+            <tr>
+                <td><span class="order-id">${order.id}</span></td>
+                <td><span class="order-customer">${customer ? customer.name : 'Unknown'}</span></td>
+                <td><span class="order-total">${formatCurrency(order.total)}</span></td>
+                <td>
+                    <span class="status-badge ${order.status}">
+                        <span class="status-dot"></span>
+                        ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    </span>
+                </td>
+                <td class="text-right"><span class="order-date">${formatDate(order.date)}</span></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ==========================================
+// TOP PERFORMING PRODUCTS
+// ==========================================
+function renderTopProducts() {
+    // Calculate revenue per product from orders
+    const revenueMap = {};
+    window.APP_DATA.ORDERS.forEach(order => {
+        order.items.forEach(item => {
+            if (!revenueMap[item.sku]) {
+                revenueMap[item.sku] = { sku: item.sku, name: item.name, revenue: 0 };
+            }
+            revenueMap[item.sku].revenue += item.qty * item.price;
+        });
+    });
+    const sorted = Object.values(revenueMap).sort((a, b) => b.revenue - a.revenue).slice(0, 8);
+    const maxRev = sorted[0] ? sorted[0].revenue : 1;
+
+    const container = document.getElementById('topProductsList');
+    container.innerHTML = sorted.map((p, i) => {
+        let rankClass = 'other';
+        if (i === 0) rankClass = 'top1';
+        else if (i === 1) rankClass = 'top2';
+        else if (i === 2) rankClass = 'top3';
+        const pct = Math.round((p.revenue / maxRev) * 100);
+        return `
+            <div class="product-row">
+                <div class="product-rank ${rankClass}">${i + 1}</div>
+                <div class="product-info">
+                    <div class="product-name">${p.name}</div>
+                    <div class="product-sku">${p.sku}</div>
+                </div>
+                <div class="product-revenue-col">
+                    <div class="product-rev-value">${formatCurrency(p.revenue)}</div>
+                    <div class="product-bar"><div class="product-bar-fill" style="width: ${pct}%;"></div></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ==========================================
+// ACTIVITY FEED
+// ==========================================
+function renderActivityFeed() {
+    const activities = [
+        { type: 'order', icon: 'fa-shopping-cart', text: '<strong>Hilton Hotels</strong> placed order <span class="highlight">#USA-26-4281</span> — $5,775', time: '12 min ago' },
+        { type: 'ship', icon: 'fa-truck', text: '<strong>Sandals Resort</strong> order <span class="highlight">#USA-26-4280</span> shipped via FedEx Express', time: '1 hr ago' },
+        { type: 'view', icon: 'fa-eye', text: '<strong>Sandals Resort</strong> viewed <span class="highlight">Floral Vines MPS-315</span>', time: '2 hrs ago' },
+        { type: 'order', icon: 'fa-shopping-cart', text: '<strong>Beach Vibes Wholesale</strong> placed order <span class="highlight">#USA-26-4279</span> — $5,112', time: '3 hrs ago' },
+        { type: 'reorder', icon: 'fa-rotate', text: '<strong>Marriott Vacations</strong> reordered <span class="highlight">Spaghetti Tank</span> (400 units)', time: '5 hrs ago' },
+        { type: 'alert', icon: 'fa-triangle-exclamation', text: 'Low stock alert: <span class="highlight">Palmlandia MPS-308</span> — only 30 units remaining', time: '6 hrs ago' },
+        { type: 'ship', icon: 'fa-truck', text: '<strong>SunSplash Stores</strong> order <span class="highlight">#USA-26-4275</span> out for delivery', time: '7 hrs ago' },
+        { type: 'view', icon: 'fa-eye', text: '<strong>Caribbean Sun Trading</strong> browsed <span class="highlight">Resort Collection</span> (14 products)', time: '8 hrs ago' },
+        { type: 'order', icon: 'fa-shopping-cart', text: '<strong>Coastal Living</strong> placed order <span class="highlight">#USA-26-4276</span> — $3,112', time: '9 hrs ago' },
+        { type: 'alert', icon: 'fa-triangle-exclamation', text: 'Low stock alert: <span class="highlight">Iconic Beach MPS-273</span> — only 15 units remaining', time: '10 hrs ago' },
+    ];
+
+    const container = document.getElementById('activityFeed');
+    container.innerHTML = activities.map(a => `
+        <div class="activity-item">
+            <div class="activity-icon-wrap ${a.type}"><i class="fas ${a.icon}"></i></div>
+            <div class="activity-text">${a.text}</div>
+            <div class="activity-time">${a.time}</div>
+        </div>
+    `).join('');
+}
+
+// ==========================================
+// CHARTS
+// ==========================================
+let revenueBarChart = null;
+let categoryDoughnutChart = null;
+let revenueTrendChart = null;
+let shippingPieChart = null;
+
+// Chart.js global defaults
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)';
+Chart.defaults.plugins.tooltip.titleColor = '#f1f5f9';
+Chart.defaults.plugins.tooltip.bodyColor = '#94a3b8';
+Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,0.1)';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.displayColors = true;
+Chart.defaults.plugins.tooltip.boxPadding = 4;
+
+// Monthly Revenue Data
+const monthlyRevenueData = {
+    labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
+    datasets: [
+        {
+            label: 'Swimwear',
+            data: [142000, 128000, 98000, 115000, 168000, 382400],
+            backgroundColor: 'rgba(11, 133, 243, 0.75)',
+            borderColor: 'rgba(11, 133, 243, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            borderSkipped: false,
+        },
+        {
+            label: 'Resort',
+            data: [95000, 108000, 122000, 134000, 156000, 298100],
+            backgroundColor: 'rgba(16, 185, 129, 0.75)',
+            borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            borderSkipped: false,
+        },
+        {
+            label: 'Imprintables',
+            data: [68000, 72000, 58000, 82000, 94000, 124300],
+            backgroundColor: 'rgba(245, 158, 11, 0.75)',
+            borderColor: 'rgba(245, 158, 11, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            borderSkipped: false,
+        },
+        {
+            label: 'Last Call',
+            data: [22000, 18000, 14000, 19000, 28000, 42410],
+            backgroundColor: 'rgba(100, 116, 139, 0.75)',
+            borderColor: 'rgba(100, 116, 139, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            borderSkipped: false,
+        },
+    ]
+};
+
+// Quarterly Revenue Data
+const quarterlyRevenueData = {
+    labels: ['Q3 2025', 'Q4 2025', 'Q1 2026'],
+    datasets: [
+        {
+            label: 'Swimwear',
+            data: [412000, 341000, 665400],
+            backgroundColor: 'rgba(11, 133, 243, 0.75)',
+            borderColor: 'rgba(11, 133, 243, 1)',
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false,
+        },
+        {
+            label: 'Resort',
+            data: [287000, 364000, 588100],
+            backgroundColor: 'rgba(16, 185, 129, 0.75)',
+            borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false,
+        },
+        {
+            label: 'Imprintables',
+            data: [198000, 212000, 300300],
+            backgroundColor: 'rgba(245, 158, 11, 0.75)',
+            borderColor: 'rgba(245, 158, 11, 1)',
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false,
+        },
+        {
+            label: 'Last Call',
+            data: [62000, 51000, 89410],
+            backgroundColor: 'rgba(100, 116, 139, 0.75)',
+            borderColor: 'rgba(100, 116, 139, 1)',
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false,
+        },
+    ]
+};
+
+function initRevenueBarChart() {
+    const ctx = document.getElementById('revenueBarChart').getContext('2d');
+    revenueBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: JSON.parse(JSON.stringify(monthlyRevenueData)),
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'rectRounded',
+                        padding: 16,
+                        font: { size: 11, weight: '500' }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                        },
+                        footer: function(tooltipItems) {
+                            let sum = 0;
+                            tooltipItems.forEach(item => sum += item.parsed.y);
+                            return 'Total: ' + formatCurrency(sum);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    grid: { display: false },
+                    ticks: { font: { weight: '500' } }
+                },
+                y: {
+                    stacked: true,
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: {
+                        callback: function(value) {
+                            if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+                            return '$' + (value / 1000).toFixed(0) + 'K';
+                        },
+                        font: { weight: '500' }
+                    }
+                }
+            },
+            onClick: function(event, elements) {
+                if (elements.length > 0) {
+                    const el = elements[0];
+                    const dataset = this.data.datasets[el.datasetIndex];
+                    const label = this.data.labels[el.index];
+                    console.log(`Clicked: ${dataset.label} in ${label} — ${formatCurrency(dataset.data[el.index])}`);
+                }
+            }
+        }
+    });
+}
+
+window.toggleRevenueChart = function(mode) {
+    document.getElementById('btnMonthly').classList.toggle('active', mode === 'monthly');
+    document.getElementById('btnQuarterly').classList.toggle('active', mode === 'quarterly');
+
+    const data = mode === 'monthly' ? monthlyRevenueData : quarterlyRevenueData;
+    revenueBarChart.data = JSON.parse(JSON.stringify(data));
+    revenueBarChart.update('none');
+};
+
+function initCategoryDoughnut() {
+    const ctx = document.getElementById('categoryDoughnut').getContext('2d');
+    categoryDoughnutChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Swimwear', 'Resort', 'Imprintables', 'Last Call'],
+            datasets: [{
+                data: [382400, 298100, 124300, 42410],
+                backgroundColor: [
+                    'rgba(11, 133, 243, 0.85)',
+                    'rgba(16, 185, 129, 0.85)',
+                    'rgba(245, 158, 11, 0.85)',
+                    'rgba(100, 116, 139, 0.85)',
+                ],
+                borderColor: [
+                    'rgba(11, 133, 243, 1)',
+                    'rgba(16, 185, 129, 1)',
+                    'rgba(245, 158, 11, 1)',
+                    'rgba(100, 116, 139, 1)',
+                ],
+                borderWidth: 2,
+                hoverOffset: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + formatCurrency(context.parsed) + ' (' + pct + '%)';
+                        }
+                    }
+                }
+            },
+            onClick: function(event, elements) {
+                if (elements.length > 0) {
+                    const el = elements[0];
+                    const label = this.data.labels[el.index];
+                    console.log('Clicked category:', label);
+                }
+            }
+        }
+    });
+}
+
+function initRevenueTrendChart() {
+    const ctx = document.getElementById('revenueTrendChart').getContext('2d');
+
+    // Daily revenue for March 2026 (21 days)
+    const dailyRevenue = [
+        28400, 31200, 22800, 35600, 41200, 38900, 29700,
+        44500, 39800, 47200, 36100, 42800, 50300, 38600,
+        45900, 52100, 34700, 48300, 56800, 51200, 47600
+    ];
+    const labels = [];
+    for (let i = 1; i <= 21; i++) {
+        labels.push('Mar ' + i);
+    }
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+    gradient.addColorStop(0, 'rgba(11, 133, 243, 0.25)');
+    gradient.addColorStop(1, 'rgba(11, 133, 243, 0.00)');
+
+    revenueTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Daily Revenue',
+                data: dailyRevenue,
+                borderColor: '#0b85f3',
+                backgroundColor: gradient,
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: '#0b85f3',
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Revenue: ' + formatCurrency(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        maxTicksLimit: 7,
+                        font: { size: 10, weight: '500' }
+                    }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + (value / 1000).toFixed(0) + 'K';
+                        },
+                        font: { size: 10, weight: '500' }
+                    }
+                }
+            },
+            onClick: function(event, elements) {
+                if (elements.length > 0) {
+                    const el = elements[0];
+                    const label = this.data.labels[el.index];
+                    const value = this.data.datasets[0].data[el.index];
+                    console.log(`Clicked: ${label} — ${formatCurrency(value)}`);
+                }
+            }
+        }
+    });
+}
+
+function initShippingPieChart() {
+    const ctx = document.getElementById('shippingPieChart').getContext('2d');
+    shippingPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['UPS', 'FedEx'],
+            datasets: [{
+                data: [58, 42],
+                backgroundColor: [
+                    'rgba(100, 75, 30, 0.85)',
+                    'rgba(99, 102, 241, 0.85)',
+                ],
+                borderColor: [
+                    'rgba(139, 92, 42, 1)',
+                    'rgba(99, 102, 241, 1)',
+                ],
+                borderWidth: 2,
+                hoverOffset: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        padding: 12,
+                        font: { size: 11, weight: '500' }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed + '% of shipments';
+                        }
+                    }
+                }
+            },
+            onClick: function(event, elements) {
+                if (elements.length > 0) {
+                    const el = elements[0];
+                    const label = this.data.labels[el.index];
+                    console.log('Clicked carrier:', label);
+                }
+            }
+        }
+    });
+}
+
+// ==========================================
+// GLOBAL SEARCH
+// ==========================================
+function initSearch() {
+    const input = document.getElementById('globalSearch');
+    const overlay = document.getElementById('searchResults');
+
+    input.addEventListener('input', function() {
+        const query = this.value.trim().toLowerCase();
+        if (query.length < 2) {
+            overlay.classList.remove('visible');
+            return;
+        }
+
+        const results = { products: [], customers: [], orders: [] };
+
+        // Search products
+        window.APP_DATA.PRODUCTS.forEach(p => {
+            if (p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query) || p.category.toLowerCase().includes(query) || p.sub.toLowerCase().includes(query)) {
+                results.products.push(p);
+            }
+        });
+
+        // Search customers
+        window.APP_DATA.CUSTOMERS.forEach(c => {
+            if (c.name.toLowerCase().includes(query) || c.location.toLowerCase().includes(query) || c.contact.toLowerCase().includes(query)) {
+                results.customers.push(c);
+            }
+        });
+
+        // Search orders
+        window.APP_DATA.ORDERS.forEach(o => {
+            const customer = getCustomerById(o.customerId);
+            const custName = customer ? customer.name.toLowerCase() : '';
+            const itemNames = o.items.map(i => i.name.toLowerCase() + ' ' + i.sku.toLowerCase()).join(' ');
+            if (o.id.toLowerCase().includes(query) || custName.includes(query) || itemNames.includes(query)) {
+                results.orders.push(o);
+            }
+        });
+
+        const totalResults = results.products.length + results.customers.length + results.orders.length;
+
+        if (totalResults === 0) {
+            overlay.innerHTML = '<div class="search-no-results">No results found for "' + escapeHtml(this.value) + '"</div>';
+            overlay.classList.add('visible');
+            return;
+        }
+
+        let html = '';
+
+        if (results.products.length > 0) {
+            html += '<div class="search-category-label">Products (' + results.products.length + ')</div>';
+            results.products.slice(0, 5).forEach(p => {
+                html += `
+                    <div class="search-result-item" onclick="document.getElementById('globalSearch').value=''; document.getElementById('searchResults').classList.remove('visible');">
+                        <div class="search-result-icon product"><i class="fas fa-tag"></i></div>
+                        <div class="search-result-text">
+                            <div class="search-result-title">${escapeHtml(p.name)}</div>
+                            <div class="search-result-sub">${p.sku} &middot; ${p.category} &middot; ${formatCurrencyFull(p.price)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        if (results.customers.length > 0) {
+            html += '<div class="search-category-label">Customers (' + results.customers.length + ')</div>';
+            results.customers.slice(0, 5).forEach(c => {
+                html += `
+                    <div class="search-result-item" onclick="document.getElementById('globalSearch').value=''; document.getElementById('searchResults').classList.remove('visible');">
+                        <div class="search-result-icon customer"><i class="fas fa-building"></i></div>
+                        <div class="search-result-text">
+                            <div class="search-result-title">${escapeHtml(c.name)}</div>
+                            <div class="search-result-sub">${c.tier} &middot; ${c.location} &middot; ${c.orders} orders</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        if (results.orders.length > 0) {
+            html += '<div class="search-category-label">Orders (' + results.orders.length + ')</div>';
+            results.orders.slice(0, 5).forEach(o => {
+                const cust = getCustomerById(o.customerId);
+                html += `
+                    <div class="search-result-item" onclick="document.getElementById('globalSearch').value=''; document.getElementById('searchResults').classList.remove('visible');">
+                        <div class="search-result-icon order"><i class="fas fa-receipt"></i></div>
+                        <div class="search-result-text">
+                            <div class="search-result-title">${o.id}</div>
+                            <div class="search-result-sub">${cust ? cust.name : 'Unknown'} &middot; ${formatCurrency(o.total)} &middot; ${o.status}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        overlay.innerHTML = html;
+        overlay.classList.add('visible');
+    });
+
+    // Close on click outside
+    document.addEventListener('click', function(e) {
+        if (!overlay.contains(e.target) && e.target !== input) {
+            overlay.classList.remove('visible');
+        }
+    });
+
+    // Close on Escape
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            overlay.classList.remove('visible');
+            this.blur();
+        }
+    });
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// ==========================================
+// NOTIFICATION BELL
+// ==========================================
+function initNotifications() {
+    const btn = document.getElementById('notifBtn');
+    btn.addEventListener('click', function() {
+        const badge = document.getElementById('notifCount');
+        if (badge.style.display !== 'none') {
+            badge.style.display = 'none';
+        }
+        // In production, this would open a notification panel
+        console.log('Notifications opened');
+    });
+}
+
+// ==========================================
+// INITIALIZE EVERYTHING
+// ==========================================
+document.addEventListener('DOMContentLoaded', function() {
+    setCurrentDate();
+    renderRecentOrders();
+    renderTopProducts();
+    renderActivityFeed();
+    initRevenueBarChart();
+    initCategoryDoughnut();
+    initRevenueTrendChart();
+    initShippingPieChart();
+    initSearch();
+    initNotifications();
+});
+</script>
+<script src="views-catalog-orders-inventory.js"></script>
+<script src="views-crm-reorder-portal.js"></script>
+<script src="views-settings-notifications.js"></script>
+<script src="views-analytics-extras.js"></script>
+<script src="views-modals-extras.js"></script>
+</body>
+</html>
