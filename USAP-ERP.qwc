@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<QBWCXML>
+  <AppName>USAP ERP</AppName>
+  <AppID>USAP-ERP-001</AppID>
+  <AppURL>https://usap.netlify.app/api/qbwc</AppURL>
+  <AppDescription>USAP ERP — QuickBooks Desktop Sync</AppDescription>
+  <AppSupport>https://usap.netlify.app/support</AppSupport>
+  <UserName>usap_sync</UserName>
+  <OwnerID>{0D3B1E11-2B7F-4C4A-9E8D-A1F2B3C4D5E6}</OwnerID>
+  <FileID>{1A2B3C4D-5E6F-7A8B-9C0D-E1F2A3B4C5D6}</FileID>
+  <QBType>QBFS</QBType>
+  <Scheduler>
+    <RunEveryNMinutes>15</RunEveryNMinutes>
+  </Scheduler>
+  <IsReadOnly>false</IsReadOnly>
+</QBWCXML>
