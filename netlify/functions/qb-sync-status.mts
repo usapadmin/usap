@@ -8,8 +8,8 @@ import { createClient } from "@supabase/supabase-js";
 
 export default async (req: Request, context: Context) => {
   const supabase = createClient(
-    Netlify.env.get("SUPABASE_URL")!,
-    Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const [queueStats, recentLogs, config, sessions] = await Promise.all([
