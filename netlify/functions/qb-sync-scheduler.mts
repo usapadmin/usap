@@ -1,4 +1,4 @@
-**
+/**
  * USAP ERP — QB Sync Scheduler
  * Runs every 15 minutes to enqueue a full pull from QuickBooks
  * (QBWC will pick these up on its next poll)
