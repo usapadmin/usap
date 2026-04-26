@@ -1,4 +1,4 @@
-/**
+**
  * USAP ERP — QB Sync Scheduler
  * Runs every 15 minutes to enqueue a full pull from QuickBooks
  * (QBWC will pick these up on its next poll)
@@ -28,8 +28,8 @@ const SYNC_ENTITIES = [
 
 export default async (req: Request) => {
   const supabase = createClient(
-    Netlify.env.get("SUPABASE_URL")!,
-    Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   // Skip if a full sync is already queued/in-progress
