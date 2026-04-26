@@ -7,8 +7,8 @@
 
 import type { Context, Config } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
-import { buildQbXmlRequest } from "./qbxml-builder.js";
-import { parseQbXmlResponse } from "./qbxml-parser.js";
+import { buildQbXmlRequest } from "./qbxml-builder.mts";
+import { parseQbXmlResponse } from "./qbxml-parser.mts";
 import { v4 as uuidv4 } from "uuid";
 
 const supabase = createClient(
